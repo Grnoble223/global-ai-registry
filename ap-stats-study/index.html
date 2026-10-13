@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stats Trainer">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<title>Unit 2 Stats Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one centered column (max 980px) under a sticky segmented tab bar; cards only on things you tap */
+:root {
+  --bg: #eaf0f2; --surface: #ffffff; --surface-2: #f3f6f7; --ink: #14212b; --muted: #556572; --line: #d0d9de;
+  --accent: #0b7a83; --accent-ink: #ffffff; --accent-soft: #d4edef;
+  --den: #a8510a; --den-soft: #fbe5cc;
+  --good: #22744a; --good-soft: #d9f0e1; --bad: #b02a2a; --bad-soft: #f7dcdc;
+  --s2a: #1f4e79; --s2b: #2c6e49; --s2c: #8f610b; --s2d: #6a46a8;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", -apple-system, "Helvetica Neue", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171c; --surface: #16222a; --surface-2: #1b2a33; --ink: #e3ebef; --muted: #9aabb6; --line: #2a3a44;
+    --accent: #45b9c1; --accent-ink: #06262a; --accent-soft: #123a3e;
+    --den: #f2a54c; --den-soft: #3b2811;
+    --good: #63cb8f; --good-soft: #15331f; --bad: #f08080; --bad-soft: #3b1919;
+    --s2a: #86b5e3; --s2b: #80c89d; --s2c: #e4b453; --s2d: #b99fea;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171c; --surface: #16222a; --surface-2: #1b2a33; --ink: #e3ebef; --muted: #9aabb6; --line: #2a3a44;
+  --accent: #45b9c1; --accent-ink: #06262a; --accent-soft: #123a3e;
+  --den: #f2a54c; --den-soft: #3b2811;
+  --good: #63cb8f; --good-soft: #15331f; --bad: #f08080; --bad-soft: #3b1919;
+  --s2a: #86b5e3; --s2b: #80c89d; --s2c: #e4b453; --s2d: #b99fea;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5;
+  -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
+}
+button { font: inherit; color: inherit; touch-action: manipulation; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 20px 64px; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 20px; padding-block: 8px 16px; }
+.brand h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.05; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+.brand p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+.scoreline { display: flex; gap: 16px; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.scoreline b { color: var(--ink); font-weight: 500; }
+
+nav.tabs {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 24px;
+  box-shadow: 0 6px 16px -12px rgba(0,0,0,.35);
+}
+nav.tabs button { border: 0; background: transparent; padding: 12px 8px; border-radius: 10px; font-weight: 700; color: var(--muted); min-height: 48px; }
+nav.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+h2.sec { font-family: var(--display); font-weight: 800; font-size: 1.45rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sec-head { display: flex; align-items: center; gap: 12px; margin: 32px 0 14px; }
+.sec-head:first-child { margin-top: 0; }
+.tag { font-family: var(--mono); font-size: 0.78rem; padding: 3px 8px; border-radius: 6px; color: var(--surface); font-weight: 500; letter-spacing: 0.04em; }
+.tag.s-2A { background: var(--s2a); } .tag.s-2B { background: var(--s2b); } .tag.s-2C { background: var(--s2c); } .tag.s-2D { background: var(--s2d); } .tag.s-KW { background: var(--accent); }
+
+/* Learn */
+.ideas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.idea h3 { margin: 0 0 4px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.idea p { margin: 0; }
+.idea.wide { grid-column: 1 / -1; }
+.formula { font-family: var(--mono); font-size: 0.98rem; background: var(--surface-2); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; margin-top: 8px; overflow-x: auto; white-space: nowrap; }
+.formula + .formula { margin-top: 6px; }
+.denoms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 640px) { .denoms { grid-template-columns: 1fr; } }
+.denoms .idea b.d { color: var(--den); }
+.kw { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.kw td { padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+.kw tr:first-child td { border-top: 0; }
+.kw td:first-child { font-family: var(--display); font-weight: 800; color: var(--accent); white-space: nowrap; }
+.kw td:nth-child(2) { color: var(--muted); }
+.kw td:last-child { font-weight: 700; }
+.scroll-x { overflow-x: auto; border-radius: 12px; }
+.callout { border-left: 4px solid var(--bad); background: var(--bad-soft); padding: 12px 16px; border-radius: 0 10px 10px 0; margin-top: 12px; }
+
+/* Shared chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.chips button { border: 1px solid var(--line); background: var(--surface); padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; min-height: 44px; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Flashcards */
+.deck-meta { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-family: var(--mono); font-size: 0.85rem; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+.card {
+  width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  padding: 24px; min-height: 280px; display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 14px 30px -22px rgba(0,0,0,.45);
+}
+.card .front { font-family: var(--display); font-weight: 600; font-size: clamp(1.3rem, 3.2vw, 1.75rem); line-height: 1.25; text-wrap: balance; }
+.card .back { border-top: 2px dashed var(--line); padding-top: 14px; font-size: 1.1rem; }
+.card .hint { margin-top: auto; color: var(--muted); font-size: 0.9rem; }
+.card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 14px 18px; font-weight: 700; min-height: 52px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.again { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
+.btn.got { background: var(--good-soft); border-color: transparent; color: var(--good); }
+.btn:disabled { opacity: .45; cursor: default; }
+.done { text-align: center; padding: 40px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
+.done h3 { font-family: var(--display); font-size: 1.6rem; margin: 0 0 6px; }
+
+/* Practice */
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; box-shadow: 0 14px 30px -22px rgba(0,0,0,.45); }
+.q-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
+.q-prompt { font-size: 1.15rem; margin-bottom: 16px; }
+.q-prompt p { margin: 0 0 10px; }
+.q-prompt .given { font-family: var(--mono); font-size: 0.95rem; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; display: inline-block; max-width: 100%; overflow-x: auto; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 640px) { .choices { grid-template-columns: 1fr; } }
+.choice { display: flex; align-items: center; gap: 12px; text-align: left; border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px; min-height: 56px; }
+.choice .letter { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); font-family: var(--mono); font-size: 0.85rem; }
+.choice .val { min-width: 0; }
+.choice.right { border-color: var(--good); background: var(--good-soft); }
+.choice.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.choice:disabled { cursor: default; }
+.choice:disabled:not(.right):not(.wrong) { opacity: .55; }
+.feedback { margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: var(--surface-2); }
+.feedback .verdict { font-weight: 700; margin-bottom: 4px; }
+.feedback .verdict.ok { color: var(--good); } .feedback .verdict.no { color: var(--bad); }
+.feedback p { margin: 4px 0; }
+.q-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+.q-actions .btn { min-width: 200px; }
+
+/* Two-way table */
+.tw-wrap { overflow-x: auto; margin: 4px 0 14px; }
+table.tw { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; min-width: 100%; }
+table.tw th, table.tw td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.tw th { font-weight: 700; font-size: 0.95rem; }
+table.tw thead th { color: var(--muted); font-size: 0.85rem; border-bottom: 2px solid var(--ink); }
+table.tw th[scope="row"] { text-align: left; }
+table.tw .tot { color: var(--muted); font-weight: 700; }
+table.tw tr.totrow td, table.tw tr.totrow th { border-top: 2px solid var(--ink); border-bottom: 0; }
+table.tw td { font-family: var(--mono); font-size: 1rem; transition: background .25s; }
+table.tw td.hl-num { background: var(--accent-soft); color: var(--accent); outline: 2px solid var(--accent); outline-offset: -2px; }
+table.tw td.hl-den { background: var(--den-soft); color: var(--den); outline: 2px solid var(--den); outline-offset: -2px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.legend .ln::before { background: var(--accent); } .legend .ld::before { background: var(--den); }
+.num { color: var(--accent); font-weight: 700; } .den { color: var(--den); font-weight: 700; }
+
+/* Tree */
+.tree { width: 100%; max-width: 520px; height: auto; display: block; margin: 4px 0 12px; }
+.tree line { stroke: var(--muted); stroke-width: 1.5; }
+.tree text { fill: var(--ink); font-family: var(--mono); font-size: 12px; }
+.tree text.lab { fill: var(--muted); }
+.tree circle { fill: var(--accent); }
+
+.foot { margin-top: 36px; color: var(--muted); font-size: 0.85rem; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.foot button { border: 0; background: none; color: var(--accent); font-weight: 700; padding: 8px 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Unit 2 Stats Trainer</h1>
+      <p>AP Statistics · two-way tables, probability rules, conditional probability</p>
+    </div>
+    <div class="scoreline" aria-live="polite">
+      <span>score <b id="sc-score">0/0</b></span>
+      <span>streak <b id="sc-streak">0</b></span>
+      <span>best <b id="sc-best">0</b></span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Study modes">
+    <button role="tab" id="tab-practice" data-tab="practice" aria-selected="true">Practice</button>
+    <button role="tab" id="tab-cards" data-tab="cards" aria-selected="false">Flashcards</button>
+    <button role="tab" id="tab-learn" data-tab="learn" aria-selected="false">Review</button>
+  </nav>
+
+  <!-- PRACTICE -->
+  <section id="view-practice" role="tabpanel" aria-labelledby="tab-practice">
+    <div class="chips" id="mode-chips" role="group" aria-label="Question type">
+      <button data-mode="mixed" aria-pressed="true">Mixed</button>
+      <button data-mode="table" aria-pressed="false">Two-way tables</button>
+      <button data-mode="rules" aria-pressed="false">Probability rules</button>
+      <button data-mode="tree" aria-pressed="false">Tree diagrams</button>
+      <button data-mode="concept" aria-pressed="false">Concepts</button>
+      <button data-mode="keyword" aria-pressed="false">Keywords</button>
+    </div>
+    <div id="q-host"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="view-cards" role="tabpanel" aria-labelledby="tab-cards" hidden>
+    <div class="chips" id="deck-chips" role="group" aria-label="Flashcard section">
+      <button data-deck="all" aria-pressed="true">All</button>
+      <button data-deck="2A" aria-pressed="false">2A Tables</button>
+      <button data-deck="2B" aria-pressed="false">2B Randomness</button>
+      <button data-deck="2C" aria-pressed="false">2C Rules</button>
+      <button data-deck="2D" aria-pressed="false">2D Conditional</button>
+    </div>
+    <div class="deck-meta"><span id="deck-left"></span><span id="deck-known"></span></div>
+    <div class="bar"><i id="deck-bar"></i></div>
+    <div id="card-host"></div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="view-learn" role="tabpanel" aria-labelledby="tab-learn" hidden>
+    <div class="sec-head"><span class="tag s-KW">60 SEC</span><h2 class="sec">See the keyword, know the move</h2></div>
+    <div class="scroll-x">
+      <table class="kw">
+        <tr><td>AND</td><td>Intersection</td><td>Usually multiply</td></tr>
+        <tr><td>OR</td><td>Union</td><td>Add, then subtract the overlap</td></tr>
+        <tr><td>NOT</td><td>Complement</td><td>1 − probability</td></tr>
+        <tr><td>GIVEN / AMONG</td><td>Conditional</td><td>Change the denominator</td></tr>
+        <tr><td>AT LEAST ONE</td><td>Complement trick</td><td>1 − P(none)</td></tr>
+        <tr><td>COMPARE GROUPS</td><td>Conditional %</td><td>Use proportions, not counts</td></tr>
+        <tr><td>INDEPENDENT?</td><td>Does one change the other?</td><td>Compare P(A | B) with P(A)</td></tr>
+      </table>
+    </div>
+    <div class="callout"><b>Don't mix these up.</b> Mutually exclusive = can't happen together. Independent = one doesn't affect the other.</div>
+
+    <div class="sec-head"><span class="tag s-2A">2A</span><h2 class="sec">Two categorical variables</h2></div>
+    <div class="ideas">
+      <div class="idea wide"><h3>The main question</h3><p>For almost every two-way table problem, ask: <b>what should the denominator be?</b></p></div>
+    </div>
+    <div class="denoms" style="margin-top:12px">
+      <div class="idea"><h3>Marginal</h3><p>Uses a margin total.</p><p>Denominator: <b class="d">grand total</b></p><p><i>"of all…"</i></p></div>
+      <div class="idea"><h3>Joint</h3><p>Two categories together.</p><p>Denominator: <b class="d">grand total</b></p><p><i>"…AND…"</i></p></div>
+      <div class="idea"><h3>Conditional</h3><p>Only one group.</p><p>Denominator: <b class="d">that group's total</b></p><p><i>"GIVEN / among / of the…"</i></p></div>
+    </div>
+    <div class="ideas" style="margin-top:12px">
+      <div class="idea"><h3>Compare groups</h3><p>Use <b>percentages</b>, not counts, when group sizes differ.</p></div>
+      <div class="idea"><h3>Association</h3><p>If conditional percentages differ across groups, there is an association. <b>Association does not prove causation.</b></p></div>
+      <div class="idea wide"><h3>Graphs</h3><p><b>Segmented bar chart:</b> compares conditional percentages. <b>Mosaic plot:</b> also shows group sizes with different bar widths. No association → the segments line up about the same.</p></div>
+    </div>
+
+    <div class="sec-head"><span class="tag s-2B">2B</span><h2 class="sec">Randomness, probability &amp; simulation</h2></div>
+    <div class="ideas">
+      <div class="idea"><h3>Random process</h3><p>The result is uncertain. <b>Outcome</b> = one result. <b>Event</b> = one or more outcomes.</p></div>
+      <div class="idea"><h3>Probability</h3><p>The <b>long-run relative frequency</b> of an event over many repetitions.</p></div>
+      <div class="idea"><h3>Law of large numbers</h3><p>More repetitions → the observed proportion gets closer to the true probability. <b>Short runs can look messy.</b></p></div>
+      <div class="idea"><h3>Randomness myth</h3><p>Random doesn't mean perfectly alternating. Streaks happen. Past independent results don't make an outcome "due."</p></div>
+      <div class="idea wide"><h3>Simulation, 4 steps</h3><p><b>1 State</b> the probability. <b>2 Plan</b> the random model. <b>3 Do</b> many trials. <b>4 Conclude:</b> successes ÷ trials.</p></div>
+    </div>
+
+    <div class="sec-head"><span class="tag s-2C">2C</span><h2 class="sec">Probability rules</h2></div>
+    <div class="ideas">
+      <div class="idea"><h3>Sample space</h3><p>All possible outcomes.</p></div>
+      <div class="idea"><h3>Probability model</h3><p>Outcomes + probabilities. Each is between 0 and 1, and they all add to 1.</p></div>
+      <div class="idea wide"><h3>Formulas</h3>
+        <div class="formula">Equally likely: P(event) = favorable ÷ total outcomes</div>
+        <div class="formula">NOT: P(Aᶜ) = 1 − P(A)</div>
+        <div class="formula">AT LEAST ONE: 1 − P(none)</div>
+        <div class="formula">OR: P(A or B) = P(A) + P(B) − P(A and B)</div>
+      </div>
+      <div class="idea"><h3>Why subtract?</h3><p>The overlap got counted twice. If events are <b>mutually exclusive</b>, the overlap is 0, so just add.</p></div>
+      <div class="idea"><h3>Symbols</h3><p><b>A ∩ B</b> = A AND B (the overlap). <b>A ∪ B</b> = A OR B (either or both).</p></div>
+    </div>
+
+    <div class="sec-head"><span class="tag s-2D">2D</span><h2 class="sec">Conditional probability &amp; independence</h2></div>
+    <div class="ideas">
+      <div class="idea wide"><h3>Formulas</h3>
+        <div class="formula">GIVEN: P(A | B) = P(A and B) ÷ P(B)</div>
+        <div class="formula">AND: P(A and B) = P(A) × P(B | A)</div>
+        <div class="formula">If independent: P(A and B) = P(A) × P(B)</div>
+      </div>
+      <div class="idea"><h3>Denominator trick</h3><p>Whatever comes after the <b>|</b> is your new group, so it's your denominator.</p></div>
+      <div class="idea"><h3>Check independence</h3><p>Compare <b>P(A | B)</b> with <b>P(A)</b>. If they're equal, knowing B doesn't change A, so the events are independent.</p></div>
+      <div class="idea"><h3>Mutually exclusive</h3><p>Can't happen together. P(A and B) = 0.</p></div>
+      <div class="idea"><h3>Independent</h3><p>One doesn't change the other. P(A and B) = P(A) × P(B).</p></div>
+      <div class="idea wide"><h3>Tree diagrams</h3><p>Use for multiple stages. <b>Multiply along a path.</b> <b>Add</b> the complete paths that fit the event. Branches leaving the same point add to 1.</p></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Your score is saved on this iPad only.</span>
+    <button id="reset-stats" type="button">Reset score</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- helpers ----------
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const f3 = (x) => x.toFixed(3);
+  const f2 = (x) => x.toFixed(2);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("ap2:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("ap2:" + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  // Correct numeric answer plus mistake-based distractors (each wrong denominator is a real student error).
+  function numChoices(correct, wrongs) {
+    const seen = new Set([f3(correct)]);
+    const out = [];
+    for (const w of wrongs) {
+      if (w == null || !isFinite(w) || w < 0 || w > 1) continue;
+      const s = f3(w);
+      if (!seen.has(s)) { seen.add(s); out.push(s); }
+      if (out.length === 3) break;
+    }
+    let guard = 0;
+    while (out.length < 3 && guard++ < 100) {
+      const w = correct + (Math.random() < 0.5 ? -1 : 1) * (0.03 + Math.random() * 0.15);
+      if (w <= 0 || w >= 1) continue;
+      const s = f3(w);
+      if (!seen.has(s)) { seen.add(s); out.push(s); }
+    }
+    const all = shuffle([f3(correct)].concat(out));
+    return { choices: all, answer: all.indexOf(f3(correct)) };
+  }
+  function textChoices(correct, wrongs) {
+    const all = shuffle([correct].concat(shuffle(wrongs).slice(0, 3)));
+    return { choices: all, answer: all.indexOf(correct) };
+  }
+
+  // ---------- score ----------
+  let stats = store.get("stats", { correct: 0, total: 0, best: 0 });
+  let streak = 0;
+  function paintScore() {
+    $("#sc-score").textContent = stats.correct + "/" + stats.total;
+    $("#sc-streak").textContent = streak;
+    $("#sc-best").textContent = stats.best;
+  }
+  function record(ok) {
+    stats.total++;
+    if (ok) { stats.correct++; streak++; stats.best = Math.max(stats.best, streak); } else streak = 0;
+    store.set("stats", stats);
+    paintScore();
+  }
+  let resetArmed = false;
+  $("#reset-stats").addEventListener("click", (e) => {
+    if (!resetArmed) { resetArmed = true; e.target.textContent = "Tap again to reset"; setTimeout(() => { resetArmed = false; e.target.textContent = "Reset score"; }, 3000); return; }
+    stats = { correct: 0, total: 0, best: 0 }; streak = 0; store.set("stats", stats); paintScore();
+    resetArmed = false; e.target.textContent = "Score reset";
+  });
+
+  // ---------- tabs ----------
+  const TABS = ["practice", "cards", "learn"];
+  function showTab(t) {
+    if (!TABS.includes(t)) t = "practice";
+    TABS.forEach((x) => {
+      $("#view-" + x).hidden = x !== t;
+      $("#tab-" + x).setAttribute("aria-selected", String(x === t));
+    });
+    store.set("tab", t);
+  }
+  $$("nav.tabs button").forEach((b) => b.addEventListener("click", () => { showTab(b.dataset.tab); window.scrollTo({ top: 0 }); }));
+
+  // ---------- question generators ----------
+
+  // 2A: two-way tables
+  const TABLE_CTX = [
+    { unit: "student", what: "students", rowVar: "Grade", colVar: "Sport",
+      rows: [{ l: "Freshman", is: "is a freshman", among: "freshmen" }, { l: "Senior", is: "is a senior", among: "seniors" }],
+      cols: [{ l: "Plays a sport", is: "plays a sport", among: "students who play a sport" }, { l: "No sport", is: "doesn't play a sport", among: "students who don't play a sport" }] },
+    { unit: "customer", what: "customers", rowVar: "Ordered on", colVar: "Rating",
+      rows: [{ l: "App", is: "ordered on the app", among: "app customers" }, { l: "Website", is: "ordered on the website", among: "website customers" }],
+      cols: [{ l: "Satisfied", is: "was satisfied", among: "satisfied customers" }, { l: "Neutral", is: "was neutral", among: "neutral customers" }, { l: "Unsatisfied", is: "was unsatisfied", among: "unsatisfied customers" }] },
+    { unit: "adult", what: "adults", rowVar: "Coffee", colVar: "Sleep",
+      rows: [{ l: "Drinks coffee", is: "drinks coffee", among: "coffee drinkers" }, { l: "No coffee", is: "doesn't drink coffee", among: "non-coffee drinkers" }],
+      cols: [{ l: "7+ hours", is: "sleeps 7+ hours", among: "adults who sleep 7+ hours" }, { l: "Under 7", is: "sleeps under 7 hours", among: "adults who sleep under 7 hours" }] },
+    { unit: "pet owner", what: "pet owners", rowVar: "Pet", colVar: "Lives in",
+      rows: [{ l: "Dog", is: "owns a dog", among: "dog owners" }, { l: "Cat", is: "owns a cat", among: "cat owners" }, { l: "Other", is: "owns another pet", among: "owners of other pets" }],
+      cols: [{ l: "City", is: "lives in a city", among: "city residents" }, { l: "Suburb", is: "lives in a suburb", among: "suburb residents" }] },
+    { unit: "phone user", what: "phone users", rowVar: "Age", colVar: "Main app",
+      rows: [{ l: "Under 25", is: "is under 25", among: "users under 25" }, { l: "25 and up", is: "is 25 or older", among: "users 25 or older" }],
+      cols: [{ l: "TikTok", is: "mostly uses TikTok", among: "TikTok users" }, { l: "Instagram", is: "mostly uses Instagram", among: "Instagram users" }, { l: "YouTube", is: "mostly uses YouTube", among: "YouTube users" }] }
+  ];
+
+  function makeTable(ctx, independent) {
+    const R = ctx.rows.length, C = ctx.cols.length;
+    let cells;
+    if (independent) {
+      // Row totals that are multiples of 10 and column shares in tenths give whole-number cells with P(col | row) = P(col).
+      let shares;
+      do { shares = Array.from({ length: C }, () => rnd(1, 6)); } while (shares.reduce((a, b) => a + b, 0) !== 10);
+      cells = Array.from({ length: R }, () => { const rt = rnd(3, 9) * 10; return shares.map((s) => rt * s / 10); });
+    } else {
+      cells = Array.from({ length: R }, () => Array.from({ length: C }, () => rnd(8, 70)));
+    }
+    const rowT = cells.map((r) => r.reduce((a, b) => a + b, 0));
+    const colT = ctx.cols.map((_, j) => cells.reduce((a, r) => a + r[j], 0));
+    const G = rowT.reduce((a, b) => a + b, 0);
+    return { cells, rowT, colT, G };
+  }
+
+  function tableHTML(ctx, t) {
+    let h = '<div class="tw-wrap"><table class="tw"><thead><tr><th scope="col" style="text-align:left">' + ctx.rowVar + " \\ " + ctx.colVar + "</th>";
+    ctx.cols.forEach((c) => { h += '<th scope="col">' + c.l + "</th>"; });
+    h += '<th scope="col" class="tot">Total</th></tr></thead><tbody>';
+    ctx.rows.forEach((r, i) => {
+      h += '<tr><th scope="row">' + r.l + "</th>";
+      t.cells[i].forEach((v, j) => { h += '<td data-k="c' + i + "-" + j + '">' + v + "</td>"; });
+      h += '<td class="tot" data-k="r' + i + '">' + t.rowT[i] + "</td></tr>";
+    });
+    h += '<tr class="totrow"><th scope="row" class="tot">Total</th>';
+    t.colT.forEach((v, j) => { h += '<td class="tot" data-k="k' + j + '">' + v + "</td>"; });
+    h += '<td class="tot" data-k="g">' + t.G + "</td></tr></tbody></table></div>";
+    return h;
+  }
+
+  function genTable() {
+    const ctx = pick(TABLE_CTX);
+    const type = pick(["marginal", "joint", "condRow", "condCol", "condRow", "indep"]);
+    const t = makeTable(ctx, type === "indep" && Math.random() < 0.5);
+    const i = rnd(0, ctx.rows.length - 1), j = rnd(0, ctx.cols.length - 1);
+    const r = ctx.rows[i], c = ctx.cols[j];
+    const cell = t.cells[i][j], rt = t.rowT[i], ct = t.colT[j], G = t.G;
+    const U = ctx.unit;
+    let ask, ans, wrongs, num, den, numDesc, denDesc, why, kind;
+
+    if (type === "marginal") {
+      const useRow = Math.random() < 0.5;
+      kind = "Marginal";
+      if (useRow) { ask = "A " + U + " is chosen at random. What's the probability the " + U + " " + r.is + "?"; ans = rt / G; num = "r" + i; numDesc = r.l + " row total"; wrongs = [cell / G, cell / rt, rt / ct, ct / G]; }
+      else { ask = "A " + U + " is chosen at random. What's the probability the " + U + " " + c.is + "?"; ans = ct / G; num = "k" + j; numDesc = c.l + " column total"; wrongs = [cell / G, cell / ct, ct / rt, rt / G]; }
+      den = "g"; denDesc = "grand total";
+      why = "There's no condition, so the denominator is everyone.";
+    } else if (type === "joint") {
+      kind = "Joint";
+      ask = "A " + U + " is chosen at random. What's the probability the " + U + " " + r.is + " <b>and</b> " + c.is + "?";
+      ans = cell / G; num = "c" + i + "-" + j; numDesc = "the " + r.l + " / " + c.l + " cell"; den = "g"; denDesc = "grand total";
+      wrongs = [cell / rt, cell / ct, rt / G, ct / G];
+      why = "AND means both at once, out of everyone.";
+    } else if (type === "condRow") {
+      kind = "Conditional";
+      ask = Math.random() < 0.5
+        ? "Of the " + r.among + ", what proportion " + c.is.replace(/^doesn't /, "don't ") + "?"
+        : "Given that the " + U + " " + r.is + ", what's the probability the " + U + " " + c.is + "?";
+      ans = cell / rt; num = "c" + i + "-" + j; numDesc = "the " + r.l + " / " + c.l + " cell"; den = "r" + i; denDesc = r.l + " row total";
+      wrongs = [cell / G, cell / ct, ct / G, rt / G];
+      why = "The condition is " + r.among + ", so only that row counts.";
+    } else if (type === "condCol") {
+      kind = "Conditional";
+      ask = "Given that the " + U + " " + c.is + ", what's the probability the " + U + " " + r.is + "?";
+      ans = cell / ct; num = "c" + i + "-" + j; numDesc = "the " + r.l + " / " + c.l + " cell"; den = "k" + j; denDesc = c.l + " column total";
+      wrongs = [cell / G, cell / rt, rt / G, ct / G];
+      why = "The condition is " + c.among + ", so only that column counts.";
+    } else {
+      // independence
+      const isInd = cell * G === rt * ct;
+      const pc = ct / G, pcr = cell / rt;
+      const mc = textChoices(isInd ? "Yes. P(" + c.l + " | " + r.l + ") equals P(" + c.l + ")." : "No. P(" + c.l + " | " + r.l + ") is not equal to P(" + c.l + ").",
+        isInd
+          ? ["No. P(" + c.l + " | " + r.l + ") is not equal to P(" + c.l + ").", "No, because both can happen to the same " + U + ".", "No, because the counts in the row are different."]
+          : ["Yes. P(" + c.l + " | " + r.l + ") equals P(" + c.l + ").", "Yes, because both can happen to the same " + U + ".", "Yes, because they're mutually exclusive."]);
+      return {
+        sec: "2D", kind: "Independence from a table",
+        prompt: tableHTML(ctx, t) + "<p>Are the events “" + r.is + "” and “" + c.is + "” independent?</p>",
+        choices: mc.choices, answer: mc.answer,
+        explain: "<p>Compare the conditional with the overall proportion:</p><p>P(" + c.l + " | " + r.l + ") = <span class='num'>" + cell + "</span> / <span class='den'>" + rt + "</span> = " + f3(pcr) + "</p><p>P(" + c.l + ") = " + ct + " / " + G + " = " + f3(pc) + "</p><p>" + (isInd ? "They're equal, so knowing the " + U + " " + r.is + " doesn't change the chance. Independent." : "They're different, so knowing the " + U + " " + r.is + " changes the chance. Not independent, which means there's an association.") + "</p>",
+        after: (host) => { mark(host, "c" + i + "-" + j, "hl-num"); mark(host, "r" + i, "hl-den"); }
+      };
+    }
+    const mc = numChoices(ans, wrongs);
+    return {
+      sec: "2A", kind: kind + " proportion",
+      prompt: tableHTML(ctx, t) + "<p>" + ask + "</p>",
+      choices: mc.choices, answer: mc.answer,
+      explain: "<p>" + why + "</p><p>Numerator: <span class='num'>" + (num[0] === "c" ? cell : num[0] === "r" ? rt : ct) + "</span> (" + numDesc + "). Denominator: <span class='den'>" + (den === "g" ? G : den[0] === "r" ? rt : ct) + "</span> (" + denDesc + ").</p><p>So the answer is " + f3(ans) + ".</p><div class='legend'><span class='ln'>numerator</span><span class='ld'>denominator</span></div>",
+      after: (host) => { mark(host, num, "hl-num"); mark(host, den, "hl-den"); }
+    };
+  }
+  function mark(host, k, cls) { const el = host.querySelector('[data-k="' + k + '"]'); if (el) el.classList.add(cls); }
+
+  // 2C/2D: probability rules
+  const RULE_CTX = [
+    { u: "a randomly chosen student", A: "has a dog", B: "has a cat" },
+    { u: "a randomly chosen teen", A: "has a part-time job", B: "plays an instrument" },
+    { u: "a randomly chosen shopper", A: "buys milk", B: "buys bread" },
+    { u: "a randomly chosen driver", A: "speeds", B: "uses a phone while driving" },
+    { u: "a randomly chosen senior", A: "takes AP Stats", B: "takes AP Bio" }
+  ];
+  const AT_LEAST = [
+    (p, n) => "Each day there's a " + p + " chance of rain, independently of other days. What's the probability it rains on <b>at least one</b> of the next " + n + " days?",
+    (p, n) => "A basketball player misses a free throw with probability " + p + ", independently. What's the probability she misses <b>at least one</b> of her next " + n + " shots?",
+    (p, n) => "A machine makes a defective part with probability " + p + ", independently. In a batch of " + n + " parts, what's the probability <b>at least one</b> is defective?",
+    (p, n) => "A spam filter lets a spam email through with probability " + p + ". If " + n + " spam emails arrive independently, what's the probability <b>at least one</b> gets through?"
+  ];
+  function genRules() {
+    const ctx = pick(RULE_CTX);
+    const type = pick(["or", "neither", "given", "andInd", "mutex", "atleast", "indep", "givenOther"]);
+    const defs = "<p>Pick " + ctx.u + ". Let A = " + ctx.A + " and B = " + ctx.B + ".</p>";
+    let a, b, ab;
+    const setABab = () => { a = rnd(4, 14) * 5; b = rnd(4, 14) * 5; const lo = Math.max(3, a + b - 100 + 1), hi = Math.min(a, b) - 3; ab = rnd(lo, Math.max(lo, hi)); };
+    const P = (x) => f2(x / 100);
+
+    if (type === "or" || type === "neither") {
+      setABab();
+      const orv = (a + b - ab) / 100;
+      const given = "<span class='given'>P(A) = " + P(a) + ", P(B) = " + P(b) + ", P(A and B) = " + P(ab) + "</span>";
+      if (type === "or") {
+        const mc = numChoices(orv, [(a + b) / 100, ab / 100, a * b / 10000 + 0, (a + b + ab) / 100]);
+        return { sec: "2C", kind: "Addition rule (OR)", prompt: defs + "<p>" + given + "</p><p>Find P(A or B).</p>", choices: mc.choices, answer: mc.answer,
+          explain: "<p>OR: add, then subtract the overlap (it was counted twice).</p><p>" + P(a) + " + " + P(b) + " − " + P(ab) + " = " + f3(orv) + "</p>" };
+      }
+      const mc = numChoices(1 - orv, [1 - (a + b) / 100, orv, 1 - ab / 100, 1 - a * b / 10000]);
+      return { sec: "2C", kind: "Complement of a union", prompt: defs + "<p>" + given + "</p><p>Find the probability of <b>neither</b> A nor B.</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>Neither = NOT (A or B).</p><p>P(A or B) = " + P(a) + " + " + P(b) + " − " + P(ab) + " = " + f3(orv) + "</p><p>1 − " + f3(orv) + " = " + f3(1 - orv) + "</p>" };
+    }
+    if (type === "given" || type === "givenOther") {
+      setABab();
+      const given = "<span class='given'>P(A) = " + P(a) + ", P(B) = " + P(b) + ", P(A and B) = " + P(ab) + "</span>";
+      if (type === "given") {
+        const mc = numChoices(ab / b, [ab / a, ab / 100, a / 100, (ab / 100) * (b / 100)]);
+        return { sec: "2D", kind: "Conditional probability", prompt: defs + "<p>" + given + "</p><p>Find P(A | B).</p>", choices: mc.choices, answer: mc.answer,
+          explain: "<p>Whatever comes after the | is the denominator. Here that's B.</p><p>P(A | B) = P(A and B) ÷ P(B) = " + P(ab) + " ÷ " + P(b) + " = " + f3(ab / b) + "</p>" };
+      }
+      const mc = numChoices(ab / a, [ab / b, ab / 100, b / 100, (a / 100) * (b / 100)]);
+      return { sec: "2D", kind: "Conditional probability", prompt: defs + "<p>" + given + "</p><p>Find P(B | A).</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>Whatever comes after the | is the denominator. Here that's A.</p><p>P(B | A) = P(A and B) ÷ P(A) = " + P(ab) + " ÷ " + P(a) + " = " + f3(ab / a) + "</p>" };
+    }
+    if (type === "andInd") {
+      a = rnd(3, 16) * 5; b = rnd(3, 16) * 5;
+      const ans = a * b / 10000;
+      const mc = numChoices(ans, [(a + b) / 100, (a + b) / 100 - ans, Math.min(a, b) / 100, Math.abs(a - b) / 100]);
+      return { sec: "2D", kind: "Multiplication rule", prompt: defs + "<p>A and B are <b>independent</b>. <span class='given'>P(A) = " + P(a) + ", P(B) = " + P(b) + "</span></p><p>Find P(A and B).</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>Independent AND: multiply.</p><p>" + P(a) + " × " + P(b) + " = " + f3(ans) + "</p>" };
+    }
+    if (type === "mutex") {
+      a = rnd(2, 10) * 5; b = rnd(2, Math.floor((95 - a) / 5)) * 5;
+      const ans = (a + b) / 100;
+      const mc = numChoices(ans, [ans - a * b / 10000, a * b / 10000, Math.abs(a - b) / 100, 1 - ans]);
+      return { sec: "2C", kind: "Mutually exclusive", prompt: "<p>A and B are <b>mutually exclusive</b>. <span class='given'>P(A) = " + P(a) + ", P(B) = " + P(b) + "</span></p><p>Find P(A or B).</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>Mutually exclusive means no overlap: P(A and B) = 0. So just add.</p><p>" + P(a) + " + " + P(b) + " = " + f3(ans) + "</p>" };
+    }
+    if (type === "atleast") {
+      const p = pick([0.05, 0.1, 0.15, 0.2, 0.25, 0.3]), n = rnd(3, 6);
+      const ans = 1 - Math.pow(1 - p, n);
+      const mc = numChoices(ans, [n * p, Math.pow(p, n), Math.pow(1 - p, n), 1 - Math.pow(p, n)]);
+      return { sec: "2C", kind: "At least one", prompt: "<p>" + pick(AT_LEAST)(p, n) + "</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>At least one → use the complement: 1 − P(none).</p><p>P(none) = (1 − " + p + ")<sup>" + n + "</sup> = " + f3(Math.pow(1 - p, n)) + "</p><p>1 − " + f3(Math.pow(1 - p, n)) + " = " + f3(ans) + "</p>" };
+    }
+    // indep check
+    a = rnd(2, 8) * 10; b = rnd(2, 8) * 10;
+    const isInd = Math.random() < 0.5;
+    ab = a * b / 100;
+    if (!isInd) {
+      const lo = Math.max(1, a + b - 99), hi = Math.min(a, b) - 1;
+      let d = pick([-1, 1]) * rnd(3, 8);
+      ab = Math.min(hi, Math.max(lo, a * b / 100 + d));
+      if (ab * 100 === a * b) ab = Math.min(hi, Math.max(lo, a * b / 100 - d));
+    }
+    const ind = ab * 100 === a * b;
+    const mc = textChoices(ind ? "Yes. P(A | B) = P(A)." : "No. P(A | B) ≠ P(A).",
+      ind ? ["No. P(A | B) ≠ P(A).", "No, because P(A and B) isn't 0.", "Can't tell without a two-way table."]
+          : ["Yes. P(A | B) = P(A).", "Yes, because P(A and B) isn't 0.", "Yes, because they're mutually exclusive."]);
+    return { sec: "2D", kind: "Check independence", prompt: defs + "<p><span class='given'>P(A) = " + P(a) + ", P(B) = " + P(b) + ", P(A and B) = " + P(ab) + "</span></p><p>Are A and B independent?</p>", choices: mc.choices, answer: mc.answer,
+      explain: "<p>P(A | B) = " + P(ab) + " ÷ " + P(b) + " = " + f3(ab / b) + ", and P(A) = " + P(a) + ".</p><p>" + (ind ? "Equal, so independent. (Same check: P(A) × P(B) = " + f3(a * b / 10000) + " = P(A and B).)" : "Not equal, so knowing B changes the chance of A. Not independent.") + "</p>" };
+  }
+
+  // 2D: tree diagrams
+  const TREE_CTX = [
+    { A: "Bus", Ac: "No bus", B: "Late", Bc: "On time", setup: (a, s, f) => a + "% of students ride the bus. " + s + "% of bus riders are late to school, and " + f + "% of other students are late.", qTot: "a randomly chosen student is late", qBayes: "a student rode the bus, given that they were late", qJoint: "a student rides the bus <b>and</b> is late" },
+    { A: "Disease", Ac: "Healthy", B: "Test +", Bc: "Test −", setup: (a, s, f) => a + "% of people have a disease. The test is positive for " + s + "% of people with the disease and for " + f + "% of healthy people.", qTot: "a random person tests positive", qBayes: "a person has the disease, given a positive test", qJoint: "a person has the disease <b>and</b> tests positive" },
+    { A: "Online", Ac: "In store", B: "Returned", Bc: "Kept", setup: (a, s, f) => a + "% of a store's sales are online. " + s + "% of online purchases are returned, compared with " + f + "% of in-store purchases.", qTot: "a random purchase is returned", qBayes: "a purchase was online, given that it was returned", qJoint: "a purchase is online <b>and</b> returned" }
+  ];
+  function treeSVG(ctx, a, s, f, showAll) {
+    const pa = f2(a / 100), pac = f2(1 - a / 100), ps = f2(s / 100), psc = f2(1 - s / 100), pf = f2(f / 100), pfc = f2(1 - f / 100);
+    const L = (x1, y1, x2, y2) => '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+    const T = (x, y, t, cls, anchor) => '<text x="' + x + '" y="' + y + '"' + (cls ? ' class="' + cls + '"' : "") + (anchor ? ' text-anchor="' + anchor + '"' : "") + ">" + t + "</text>";
+    let g = "";
+    g += L(16, 110, 170, 55) + L(16, 110, 170, 165);
+    g += L(250, 55, 380, 25) + L(250, 55, 380, 85) + L(250, 165, 380, 135) + L(250, 165, 380, 195);
+    g += '<circle cx="16" cy="110" r="5"/>';
+    g += T(175, 59, ctx.A) + T(175, 169, ctx.Ac);
+    g += T(80, 72, pa, "lab", "middle") + T(80, 158, pac, "lab", "middle");
+    g += T(386, 29, ctx.B) + T(386, 89, ctx.Bc) + T(386, 139, ctx.B) + T(386, 199, ctx.Bc);
+    g += T(312, 32, ps, "lab", "middle") + T(312, 84, psc, "lab", "middle") + T(312, 142, pf, "lab", "middle") + T(312, 194, pfc, "lab", "middle");
+    return '<svg class="tree" viewBox="0 0 470 215" role="img" aria-label="Tree diagram">' + g + "</svg>";
+  }
+  function genTree() {
+    const ctx = pick(TREE_CTX);
+    const a = rnd(2, 6) * 10, s = rnd(2, 8) * 5;
+    let f; do { f = rnd(1, 6) * 2; } while (f === s);
+    const pa = a / 100, ps = s / 100, pf = f / 100;
+    const j1 = pa * ps, j2 = (1 - pa) * pf, tot = j1 + j2;
+    const type = pick(["total", "total", "bayes", "joint"]);
+    const intro = "<p>" + ctx.setup(a, s, f) + "</p>" + treeSVG(ctx, a, s, f);
+    if (type === "total") {
+      const mc = numChoices(tot, [ps + pf, pa * ps, (ps + pf) / 2, j1 + pf]);
+      return { sec: "2D", kind: "Tree diagram · total probability", prompt: intro + "<p>Find the probability that " + ctx.qTot + ".</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>Multiply along each path that ends in “" + ctx.B + "”, then add the paths.</p><p>" + f2(pa) + " × " + f2(ps) + " = " + f3(j1) + "</p><p>" + f2(1 - pa) + " × " + f2(pf) + " = " + f3(j2) + "</p><p>" + f3(j1) + " + " + f3(j2) + " = " + f3(tot) + "</p>" };
+    }
+    if (type === "joint") {
+      const mc = numChoices(j1, [ps, pa, tot, pa + ps - pa * ps]);
+      return { sec: "2D", kind: "Tree diagram · one path", prompt: intro + "<p>Find the probability that " + ctx.qJoint + ".</p>", choices: mc.choices, answer: mc.answer,
+        explain: "<p>AND along one path: multiply.</p><p>P(" + ctx.A + " and " + ctx.B + ") = " + f2(pa) + " × " + f2(ps) + " = " + f3(j1) + "</p>" };
+    }
+    const ans = j1 / tot;
+    const mc = numChoices(ans, [ps, j1, pa, j1 / pa]);
+    return { sec: "2D", kind: "Tree diagram · reverse conditional", prompt: intro + "<p>Find the probability that " + ctx.qBayes + ".</p>", choices: mc.choices, answer: mc.answer,
+      explain: "<p>The condition is “" + ctx.B + "”, so P(" + ctx.B + ") is the denominator.</p><p>P(" + ctx.A + " and " + ctx.B + ") = " + f2(pa) + " × " + f2(ps) + " = " + f3(j1) + "</p><p>P(" + ctx.B + ") = " + f3(j1) + " + " + f3(j2) + " = " + f3(tot) + "</p><p>" + f3(j1) + " ÷ " + f3(tot) + " = " + f3(ans) + "</p>" };
+  }
+
+  // Concept bank
+  const CONCEPTS = [
+    { sec: "2A", q: "A question says “Of the seniors surveyed, what percent own a car?” What's the denominator?", a: "The total number of seniors", w: ["The grand total", "The total number of car owners", "The number of seniors who own a car"], e: "“Of the seniors” is a condition. A conditional proportion uses that group's total." },
+    { sec: "2A", q: "Group sizes are very different. What's the right way to compare the two groups?", a: "Compare conditional percentages", w: ["Compare the raw counts", "Compare the marginal totals", "Compare the grand totals"], e: "Counts are misleading when one group is bigger. Use percentages within each group." },
+    { sec: "2A", q: "In a segmented bar chart, the segments for each group line up at about the same heights. What does that suggest?", a: "Little or no association between the variables", w: ["A strong association", "One variable causes the other", "The sample sizes are equal"], e: "No association means the conditional distributions are about the same, so the segments line up." },
+    { sec: "2A", q: "How is a mosaic plot different from a segmented bar chart?", a: "The bar widths show the size of each group", w: ["It shows counts instead of percentages", "It can only show two categories", "It shows the joint distribution only"], e: "A mosaic plot shows conditional percentages and also uses widths for group sizes." },
+    { sec: "2A", q: "47% of students who eat breakfast earn A's, compared with 29% of students who skip breakfast. Which conclusion is correct?", a: "There's an association between breakfast and grades", w: ["Eating breakfast causes higher grades", "There's no association", "Skipping breakfast causes lower grades"], e: "Different conditional percentages show an association. Association doesn't prove causation." },
+    { sec: "2A", q: "“What proportion of all customers are app users AND satisfied?” What type of proportion is this?", a: "Joint", w: ["Marginal", "Conditional", "Complement"], e: "AND means two categories together, out of the grand total. That's a joint proportion." },
+    { sec: "2B", q: "What does “the probability of heads is 0.5” mean?", a: "In many flips, about half will be heads", w: ["Every 2 flips will include exactly 1 head", "After a tail, a head is more likely", "In 10 flips there will be exactly 5 heads"], e: "Probability is the long-run relative frequency over many repetitions." },
+    { sec: "2B", q: "A coin lands heads 7 times in 10 flips. What does the law of large numbers say?", a: "With many more flips, the proportion of heads will tend to get close to 0.5", w: ["Tails is now due to balance things out", "The coin is definitely unfair", "The next 10 flips will have about 3 heads"], e: "Short runs can look messy. Only over many repetitions does the proportion settle near the true probability." },
+    { sec: "2B", q: "A roulette wheel lands on red 6 times in a row. What's the probability the next spin is red?", a: "The same as on any spin", w: ["Lower, because black is due", "Higher, because red is on a streak", "Exactly 0.5"], e: "Spins are independent. Past results don't make an outcome “due.” (Roulette also has green, so it's not exactly 0.5.)" },
+    { sec: "2B", q: "What's the correct order of the simulation steps?", a: "State, Plan, Do, Conclude", w: ["Plan, State, Conclude, Do", "Do, Plan, State, Conclude", "State, Do, Plan, Conclude"], e: "State the probability, plan the random model, do many trials, conclude with successes ÷ trials." },
+    { sec: "2B", q: "Rolling a die, which of these is an event rather than a single outcome?", a: "Rolling an even number", w: ["Rolling a 4", "Rolling a 6", "Rolling a 1"], e: "An outcome is one result. An event can include several outcomes, like {2, 4, 6}." },
+    { sec: "2B", q: "In a simulation, 37 of 200 trials were successes. What's the estimated probability?", a: "0.185", w: ["0.37", "0.163", "37"], e: "Conclude: successes ÷ trials = 37 ÷ 200 = 0.185." },
+    { sec: "2C", q: "Which of these is a valid probability model for outcomes A, B, C?", a: "0.2, 0.5, 0.3", w: ["0.4, 0.4, 0.4", "0.5, 0.6, −0.1", "0.1, 0.2, 0.3"], e: "Every probability must be between 0 and 1, and they must add to exactly 1." },
+    { sec: "2C", q: "Why do we subtract P(A and B) in the addition rule?", a: "The overlap was counted twice", w: ["To make the answer smaller than 1", "Because A and B are independent", "Because A and B are mutually exclusive"], e: "P(A) and P(B) both include the overlap, so it gets added twice. Subtract it once." },
+    { sec: "2C", q: "What does A ∪ B mean?", a: "A or B (either or both)", w: ["A and B (the overlap)", "Not A", "A given B"], e: "∪ is union = OR. ∩ is intersection = AND." },
+    { sec: "2C", q: "“Find the probability that at least one of 5 people is left-handed.” What's the fastest approach?", a: "1 − P(none are left-handed)", w: ["Add P(left-handed) five times", "Multiply P(left-handed) five times", "1 − P(all are left-handed)"], e: "At least one is the complement of none." },
+    { sec: "2D", q: "A and B are mutually exclusive, and both have probability greater than 0. Are they independent?", a: "No, because if A happens, B can't", w: ["Yes, always", "Yes, if P(A) = P(B)", "Can't be determined"], e: "Knowing A happened changes P(B) to 0. That's dependence, so mutually exclusive events (with positive probability) are never independent." },
+    { sec: "2D", q: "How do you check whether A and B are independent?", a: "Compare P(A | B) with P(A)", w: ["Check whether P(A and B) = 0", "Check whether P(A) + P(B) = 1", "Compare P(A) with P(B)"], e: "If P(A | B) = P(A), knowing B doesn't change A." },
+    { sec: "2D", q: "In a tree diagram, what's true about the branches leaving the same point?", a: "Their probabilities add to 1", w: ["Their probabilities are equal", "You multiply them together", "They add to the next branch's probability"], e: "Branches from one point cover every possibility at that stage, so they add to 1." },
+    { sec: "2D", q: "In P(A | B), which event's probability goes in the denominator?", a: "B", w: ["A", "A and B", "A or B"], e: "Whatever comes after the | is your new group, so P(B) is the denominator." },
+    { sec: "2D", q: "P(A) = 0.4 and P(B | A) = 0.25. What is P(A and B)?", a: "0.10", w: ["0.65", "0.625", "0.15"], e: "General multiplication rule: P(A) × P(B | A) = 0.4 × 0.25 = 0.10." }
+  ];
+  function genConcept() {
+    const c = pick(CONCEPTS);
+    const mc = textChoices(c.a, c.w);
+    return { sec: c.sec, kind: "Concept", prompt: "<p>" + c.q + "</p>", choices: mc.choices, answer: mc.answer, explain: "<p>" + c.e + "</p>" };
+  }
+
+  // Keyword drill
+  const KEYWORDS = [
+    ["AND", "Intersection: usually multiply"], ["OR", "Union: add, then subtract the overlap"], ["NOT", "Complement: 1 − probability"],
+    ["GIVEN / AMONG", "Conditional: change the denominator"], ["AT LEAST ONE", "Complement trick: 1 − P(none)"],
+    ["COMPARE GROUPS", "Use conditional percentages, not counts"], ["INDEPENDENT?", "Compare P(A | B) with P(A)"]
+  ];
+  function genKeyword() {
+    const k = pick(KEYWORDS);
+    const mc = textChoices(k[1], KEYWORDS.filter((x) => x !== k).map((x) => x[1]));
+    return { sec: "KW", kind: "Keyword → move", prompt: "<p>The question says <b>" + k[0] + "</b>. What's the move?</p>", choices: mc.choices, answer: mc.answer, explain: "<p><b>" + k[0] + "</b> → " + k[1] + ".</p>" };
+  }
+
+  const GEN = { table: genTable, rules: genRules, tree: genTree, concept: genConcept, keyword: genKeyword };
+  function genMixed() {
+    const r = Math.random();
+    return (r < 0.28 ? genTable : r < 0.56 ? genRules : r < 0.72 ? genTree : r < 0.92 ? genConcept : genKeyword)();
+  }
+
+  // ---------- practice UI ----------
+  let mode = store.get("mode", "mixed");
+  if (mode !== "mixed" && !GEN[mode]) mode = "mixed";
+  const host = $("#q-host");
+
+  function nextQuestion() {
+    const q = mode === "mixed" ? genMixed() : GEN[mode]();
+    const secName = { "2A": "Two-way tables", "2B": "Randomness", "2C": "Probability rules", "2D": "Conditional & independence", KW: "Test-day keywords" }[q.sec];
+    host.innerHTML =
+      '<div class="q"><div class="q-meta"><span class="tag s-' + q.sec + '">' + (q.sec === "KW" ? "KEY" : q.sec) + "</span><span>" + secName + " · " + q.kind + "</span></div>" +
+      '<div class="q-prompt">' + q.prompt + "</div>" +
+      '<div class="choices">' + q.choices.map((c, i) => '<button class="choice" data-i="' + i + '"><span class="letter">' + "ABCD"[i] + '</span><span class="val">' + c + "</span></button>").join("") + "</div>" +
+      '<div class="feedback" hidden></div>' +
+      '<div class="q-actions"><button class="btn primary" id="next-q" hidden>Next question</button></div></div>';
+    $$(".choice", host).forEach((btn) => btn.addEventListener("click", () => {
+      const i = +btn.dataset.i, ok = i === q.answer;
+      $$(".choice", host).forEach((b) => { b.disabled = true; if (+b.dataset.i === q.answer) b.classList.add("right"); });
+      if (!ok) btn.classList.add("wrong");
+      const fb = $(".feedback", host);
+      fb.innerHTML = '<div class="verdict ' + (ok ? "ok" : "no") + '">' + (ok ? "Correct." : "Not quite. The answer is " + "ABCD"[q.answer] + ".") + "</div>" + q.explain;
+      fb.hidden = false;
+      if (q.after) q.after(host);
+      record(ok);
+      const nb = $("#next-q");
+      nb.hidden = false;
+      nb.focus({ preventScroll: true });
+      fb.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }));
+    $("#next-q").addEventListener("click", () => { nextQuestion(); host.scrollIntoView({ block: "start", behavior: "smooth" }); });
+  }
+  function setMode(m) {
+    mode = m; store.set("mode", m);
+    $$("#mode-chips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+    nextQuestion();
+  }
+  $$("#mode-chips button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  // ---------- flashcards ----------
+  const CARDS = [
+    ["2A", "What's the main question for any two-way table problem?", "What should the denominator be?"],
+    ["2A", "Marginal proportion: what's the denominator?", "The grand total. It uses a margin (row or column) total as the numerator. Clue words: “of all…”"],
+    ["2A", "Joint proportion: what's the denominator?", "The grand total. Joint = two categories together. Clue word: AND."],
+    ["2A", "Conditional proportion: what's the denominator?", "Only that group's total. Clue words: GIVEN, among, of the…"],
+    ["2A", "Memory trick for the three kinds of proportions", "Marginal = margin · Joint = AND · Conditional = GIVEN"],
+    ["2A", "Comparing groups of different sizes: counts or percentages?", "Percentages (conditional proportions)."],
+    ["2A", "When is there an association between two categorical variables?", "When the conditional percentages differ across groups. Association does not prove causation."],
+    ["2A", "What does a segmented bar chart compare?", "Conditional percentages. If the segments line up about the same, there's no association."],
+    ["2A", "What extra information does a mosaic plot show?", "Group sizes, shown by the widths of the bars."],
+    ["2B", "Random process", "A process where the result is uncertain."],
+    ["2B", "Outcome vs. event", "Outcome = one result. Event = one or more outcomes."],
+    ["2B", "Definition of probability", "The long-run relative frequency of an event over many repetitions."],
+    ["2B", "Law of large numbers", "With more repetitions, the observed proportion tends to get closer to the true probability. Short runs can look messy."],
+    ["2B", "Is a streak of 5 heads a sign the coin isn't random?", "No. Streaks and clusters happen in random data. Past independent results don't make an outcome “due.”"],
+    ["2B", "The 4 steps of a simulation", "1 State the probability. 2 Plan the random model. 3 Do many trials. 4 Conclude: successes ÷ trials."],
+    ["2C", "Sample space", "The set of all possible outcomes."],
+    ["2C", "Rules for a valid probability model", "Every probability is between 0 and 1, and all of them add to 1."],
+    ["2C", "Equally likely outcomes formula", "P(event) = favorable outcomes ÷ total outcomes"],
+    ["2C", "Complement rule (NOT)", "P(Aᶜ) = 1 − P(A)"],
+    ["2C", "“At least one” trick", "P(at least one) = 1 − P(none)"],
+    ["2C", "Addition rule (OR)", "P(A or B) = P(A) + P(B) − P(A and B)"],
+    ["2C", "Why subtract P(A and B) in the OR rule?", "The overlap was counted twice. If A and B are mutually exclusive, the overlap is 0, so just add."],
+    ["2C", "A ∩ B vs. A ∪ B", "∩ intersection = A AND B (the overlap). ∪ union = A OR B (either or both)."],
+    ["2D", "Conditional probability formula", "P(A | B) = P(A and B) ÷ P(B)"],
+    ["2D", "The denominator trick for P(A | B)", "Whatever comes after the | is your new group, so it's the denominator."],
+    ["2D", "General multiplication rule (AND)", "P(A and B) = P(A) × P(B | A)"],
+    ["2D", "Multiplication rule for independent events", "P(A and B) = P(A) × P(B)"],
+    ["2D", "How do you check independence?", "Compare P(A | B) with P(A). If equal, knowing B doesn't change A, so they're independent."],
+    ["2D", "Mutually exclusive vs. independent", "Mutually exclusive: can't happen together, P(A and B) = 0. Independent: one doesn't change the other, P(A and B) = P(A) × P(B)."],
+    ["2D", "Tree diagram rules", "Multiply along a path. Add the complete paths that satisfy the event. Branches leaving the same point add to 1."]
+  ];
+  let deckName = "all", queue = [], known = 0, deckSize = 0, flipped = false;
+  function buildDeck(name) {
+    deckName = name;
+    $$("#deck-chips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.deck === name)));
+    queue = shuffle(CARDS.filter((c) => name === "all" || c[0] === name));
+    deckSize = queue.length; known = 0; flipped = false;
+    renderCard();
+  }
+  function renderCard() {
+    const ch = $("#card-host");
+    $("#deck-left").textContent = queue.length + " left";
+    $("#deck-known").textContent = known + " of " + deckSize + " known";
+    $("#deck-bar").style.width = (deckSize ? (known / deckSize) * 100 : 0) + "%";
+    if (!queue.length) {
+      ch.innerHTML = '<div class="done"><h3>Deck done</h3><p>You marked all ' + deckSize + ' cards as known.</p><button class="btn primary" id="deck-restart">Shuffle and start over</button></div>';
+      $("#deck-restart").addEventListener("click", () => buildDeck(deckName));
+      return;
+    }
+    const c = queue[0];
+    ch.innerHTML =
+      '<button class="card" id="flash" aria-live="polite"><span class="tag s-' + c[0] + '" style="align-self:flex-start">' + c[0] + "</span>" +
+      '<span class="front">' + c[1] + "</span>" +
+      (flipped ? '<span class="back">' + c[2] + "</span>" : '<span class="hint">Tap the card to see the answer</span>') + "</button>" +
+      '<div class="card-actions"><button class="btn again" id="c-again"' + (flipped ? "" : " disabled") + '>Study again</button><button class="btn got" id="c-got"' + (flipped ? "" : " disabled") + ">I knew it</button></div>";
+    $("#flash").addEventListener("click", () => { flipped = !flipped; renderCard(); });
+    $("#c-again").addEventListener("click", () => { const card = queue.shift(); queue.splice(Math.min(3, queue.length), 0, card); flipped = false; renderCard(); });
+    $("#c-got").addEventListener("click", () => { queue.shift(); known++; flipped = false; renderCard(); });
+  }
+  $$("#deck-chips button").forEach((b) => b.addEventListener("click", () => buildDeck(b.dataset.deck)));
+
+  // ---------- boot ----------
+  paintScore();
+  const hashTab = (location.hash || "").replace("#", "");
+  showTab(TABS.includes(hashTab) ? hashTab : store.get("tab", "practice"));
+  setMode(mode);
+  buildDeck("all");
+})();
+</script>
+
+</body>
+</html>
